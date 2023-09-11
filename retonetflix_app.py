@@ -2,80 +2,84 @@ import streamlit as st
 import pandas as pd
 from google.cloud import firestore
 from google.oauth2 import service_account
+#import firebase_admin
+#from firebase_admin import credentials, firestore
 
 import json
 key_dict = json.loads(st.secrets["textkey"])
 creds = service_account.Credentials.from_service_account_info(key_dict)
 db = firestore.Client(credentials=creds, project="retonetflix-5717f")
+#path = '/content/'
 
-dbNames = db.collection("names")
-st.header("Nuevo registro")
+#cred = credentials.Certificate(path + "retonetflix.json")
+#firebase_admin.initialize_app(cred)
+#db = firestore.client()
 
-index = st.text_input("Index")
-name = st.text_input("Name")
-sex = st.selectbox(
-  'Select Sex',
-  ('F', 'M', 'Other'))
+dbMovies = db.collection("movies")
+st.header("Netflix app")
 
-submit = st.button("Crear nuevo registro")
+movies_ref = list(db.collection(u'movies').stream())
+movies_dict = list(map(lambda x: x.to_dict(), movies_ref))
+movies_dataframe = pd.DataFrame(movies_dict)
 
-# Once the name has submitted, upload it to the database
-if index and name and sex and submit:
-  doc_ref = db.collection("names").document(name)
-  doc_ref.set({
-    "index": index,
-    "name": name,
-    "sex": sex
-  })
-  st.sidebar.write("Registro insertado correctamente")
+agree = st.sidebar.checkbox("Mostrar todos los filmes")
+if agree:
+  st.dataframe(movies_dataframe)
 
-# ...
-def loadByName(name):
-  names_ref = dbNames.where(u'name', u'==', name)
-  currentName = None
-  for myname in names_ref.stream():
-    currentName = myname
-  return currentName
 
-st.sidebar.subheader("Buscar nombre")
-nameSearch = st.sidebar.text_input("nombre")
+
+def loadbyName(movie):
+  movies_ref1 = dbMovies.where(u'name',u'array_contains_any',movie)
+  movies_dict1 = list(map(lambda x: x.to_dict(), movies_ref1))
+  movies_dataframe1 = pd.DataFrame(movies_dict1)
+  return movies_dataframe1
+
+st.sidebar.subheader("Titulo del filme:")
+movieSearch = st.sidebar.text_input("nombre")
 btnFiltrar = st.sidebar.button("Buscar")
 
 if btnFiltrar:
-  doc = loadByName(nameSearch)
-  if doc is None:
+  movies_list = loadbyName(movieSearch)
+  if movies_list is None:
     st.sidebar.write("Nombre no existe")
   else:
-    st.sidebar.write(doc.to_dict())
-# ...
-st.sidebar.markdown("""---""")
-btnEliminar = st.sidebar.button("Eliminar")
-if btnEliminar:
-  deletename = loadByName(nameSearch)
-  if deletename is None:
-    st.sidebar.write(f"{nameSearch} no existe")
-  else:
-    dbNames.document(deletename.id).delete()
-    st.sidebar.write(f"{nameSearch} eliminado")
-#...
+    st.dataframe(movies_list)
 
-st.sidebar.markdown("""---""")
-newname = st.sidebar.text_input("Actualizar nombre")
-btnActualizar = st.sidebar.button("Actualizar")
-if btnActualizar:
-  updatename = loadByName(nameSearch)
-  if updatename is None:
-    st.write(f"{nameSearch} no existe")
-  else:
-    myupdatename = dbNames.document(updatename.id)
-    myupdatename.update(
-    {
-      "name": newname
-    }
-    )
-# ...
+st.sidebar.markdown("""-----""")
 
-names_ref = list(db.collection(u'names').stream())
-names_dict = list(map(lambda x: x.to_dict(), names_ref))
-names_dataframe = pd.DataFrame(names_dict)
-st.dataframe(names_dataframe)
+def load_data_bydirector(director):
+  movies_ref1 = dbMovies.where(u'name',u'==',director)
+  movies_dict1 = list(map(lambda x: x.to_dict(), movies_ref1))
+  movies_dataframe1 = pd.DataFrame(movies_dict1)
+  return filtered_data_bydirector
+
+data = movies_dataframe
+selected_director = st.sidebar.selectbox("Select director", data['director'].unique())
+btnFilterbyDirector = st.sidebar.button('Filter by director')
+
+if (btnFilterbyDirector):
+  filterbydirector = load_data_bydirector(selected_director)
+  count_row = filterbydirector.shape[0]
+  st.write (f"Total items: {count_row}")
+  st.dataframe(filterbydirector)
+
+st.sidebar.markdown("""-----""")
+
+st.sidebar.header ("Nuevo Filme")
+name = st.sidebar.text_input("Name")
+company = st.sidebar.selectbox("Company", data['company'].unique())
+director = st.sidebar.selectbox("Director", data['director'].unique())
+genre = st.sidebar.selectbox("Genre", data['genre'].unique())
+
+submit = st.sidebar.button("Crear nuevo registro")
+if name and company and director and genre and submit:
+  doc_ref = db.collection("movies").document(name)
+  doc_ref.set({
+    "name": name,
+    "company": company,
+    "director": director,
+    "genre": genre
+  })
+  st.sidebar.write ("registro insertado correctamente")
+
+st.sidebar.markdown("""-----""")
