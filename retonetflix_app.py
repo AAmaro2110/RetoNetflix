@@ -22,9 +22,9 @@ movies_ref = list(db.collection(u'movies').stream())
 movies_dict = list(map(lambda x: x.to_dict(), movies_ref))
 movies_dataframe = pd.DataFrame(movies_dict)
 
-agree = st.sidebar.checkbox("Mostrar todos los filmes")
-if agree:
-  st.dataframe(movies_dataframe)
+#agree = st.sidebar.checkbox("Mostrar todos los filmes")
+#if agree:
+st.dataframe(movies_dataframe)
 
 
 
