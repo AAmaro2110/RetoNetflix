@@ -20,7 +20,7 @@ st.header("Netflix app")
 
 @st.cache_data
 def load_data():
-  movies_ref = list(db.collection(u'movies').stream())
+  movies_ref = list(db.collection(u'movies').limit(10).stream())
   movies_dict = list(map(lambda x: x.to_dict(), movies_ref))
   movies_dataframe = pd.DataFrame(movies_dict)
   return movies_dataframe
