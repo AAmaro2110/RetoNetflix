@@ -58,7 +58,7 @@ if btnFiltrar:
 st.sidebar.markdown("""-----""")
 
 def load_data_bydirector(director):
-  movies_ref1 = dbMovies.where(u'name',u'==',director)
+  movies_ref1 = dbMovies.where(u'director',u'==',director)
   movies_dict1 = list(map(lambda x: x.to_dict(), movies_ref1))
   movies_dataframe1 = pd.DataFrame(movies_dict1)
   return movies_dataframe1
