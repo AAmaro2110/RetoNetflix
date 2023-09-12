@@ -18,16 +18,16 @@ db = firestore.Client(credentials=creds, project="retonetflix-5717f")
 dbMovies = db.collection("movies")
 st.header("Netflix app")
 
-@st.cache_data
-def load_data():
-  movies_ref = list(db.collection(u'movies').limit(10).stream())
-  movies_dict = list(map(lambda x: x.to_dict(), movies_ref))
-  movies_dataframe = pd.DataFrame(movies_dict)
-  return movies_dataframe
 
-data_load_state = st.text('Loading data...')
-data = load_data()
-data_load_state.text('Done! (using st.cache)')
+movies_ref = list(db.collection(u'movies').limit(10).stream())
+movies_dict = list(map(lambda x: x.to_dict(), movies_ref))
+movies_dataframe = pd.DataFrame(movies_dict)
+
+#Test
+
+
+data = movies_dataframe
+
 
 agree = st.sidebar.checkbox("Mostrar todos los filmes")
 if agree:
@@ -61,7 +61,7 @@ def load_data_bydirector(director):
   movies_ref1 = dbMovies.where(u'name',u'==',director)
   movies_dict1 = list(map(lambda x: x.to_dict(), movies_ref1))
   movies_dataframe1 = pd.DataFrame(movies_dict1)
-  return filtered_data_bydirector
+  return movies_dataframe1
 
 data = movies_dataframe
 selected_director = st.sidebar.selectbox("Select director", data['director'].unique())
