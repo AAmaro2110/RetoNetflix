@@ -26,7 +26,7 @@ def load_data():
   return movies_dataframe
 
 data_load_state = st.text('Loading data...')
-data = load_data(1000)
+data = load_data()
 data_load_state.text('Done! (using st.cache)')
 
 agree = st.sidebar.checkbox("Mostrar todos los filmes")
