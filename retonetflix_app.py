@@ -70,12 +70,13 @@ genre = st.sidebar.selectbox("Genre", data['genre'].unique())
 
 submit = st.sidebar.button("Crear nuevo registro")
 if name and company and director and genre and submit:
-  doc_ref = db.collection("movies").document(name)
+  doc_ref = db.collection("movies").document()
   doc_ref.set({
     "name": name,
     "company": company,
     "director": director,
-    "genre": genre
+    "genre": genre,
+    "id": doc_ref.id
   })
   st.sidebar.write ("registro insertado correctamente")
 
