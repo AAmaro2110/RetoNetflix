@@ -17,53 +17,40 @@ db = firestore.Client(credentials=creds, project="retonetflix-5717f")
 
 dbMovies = db.collection("movies")
 st.header("Netflix app")
+@st.cache_data
+def cargarDatos():
+  movies_ref = list(db.collection(u'movies').stream())
+  movies_dict = list(map(lambda x: x.to_dict(), movies_ref))
+  movies_dataframe = pd.DataFrame(movies_dict)
+  return movies_dataframe
 
-
-movies_ref = list(db.collection(u'movies').stream())
-movies_dict = list(map(lambda x: x.to_dict(), movies_ref))
-movies_dataframe = pd.DataFrame(movies_dict)
-
-#Test
-
-
-data = movies_dataframe
-
+data = cargarDatos()
 
 agree = st.sidebar.checkbox("Mostrar todos los filmes")
 if agree:
   st.dataframe(data)
 
-
-
 def loadbyName(movie):
-  movies_ref1 = dbMovies.where(u'name',u'array_contains_any',movie)
-  movies_dict1 = list(map(lambda x: x.to_dict(), movies_ref1))
-  movies_dataframe1 = pd.DataFrame(movies_dict1)
-  if movies_dataframe1 is None:
-    st.sidebar.write("nombre no existe")
-  else:
-    return movies_dataframe1
+  filtered_data_byname = data[data['name'].str.contains(movie, na=False, case=False)]
+  return filtered_data_byname
 
 st.sidebar.subheader("Titulo del filme:")
 movieSearch = st.sidebar.text_input("nombre")
 btnFiltrar = st.sidebar.button("Buscar")
-
+#
 if btnFiltrar:
-  movies_list = loadbyName(movieSearch)
-  if movies_list is None:
-    st.sidebar.write("Nombre no existe")
-  else:
-    st.dataframe(movies_list)
+  movies_byName = loadbyName(movieSearch)
+  count_row = movies_byName.shape[0]
+  st.write (f"Total items: {count_row}")
+  st.dataframe(movies_byName)
 
 st.sidebar.markdown("""-----""")
 
 def load_data_bydirector(director):
-  movies_ref1 = dbMovies.where(u'director',u'==',director)
-  movies_dict1 = list(map(lambda x: x.to_dict(), movies_ref1))
-  movies_dataframe1 = pd.DataFrame(movies_dict1)
-  return movies_dataframe1
+  movies_filtered = data[data['director'] == director]
+  return movies_filtered
 
-data = movies_dataframe
+
 selected_director = st.sidebar.selectbox("Select director", data['director'].unique())
 btnFilterbyDirector = st.sidebar.button('Filter by director')
 
